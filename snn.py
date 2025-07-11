@@ -1,8 +1,3 @@
-All right, here's your Python code, fully translated into professional, international English. I've focused on clarity, standard terminology in neuroscience and computer vision, and added comments where useful to ensure anyone reading it can grasp its functionality.
-
------
-
-```python
 import numpy as np
 import cv2
 import time
@@ -648,5 +643,3 @@ if __name__ == "__main__":
     # Required for multiprocessing to work correctly on Windows when creating new processes
     multiprocessing.freeze_support()
     main()
-
-```
