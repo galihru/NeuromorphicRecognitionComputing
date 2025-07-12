@@ -29,13 +29,20 @@ jobs:
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
 
-      - name: Commit Packaged Charts
+      - name: Commit Packaged Charts Safely
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          git pull origin main --rebase
+
+          # Tambahkan perubahan jika ada
           git add packaged-charts/
-          git commit -m "Update Helm chart package [skip ci]" || echo "No changes to commit"
+          git diff --cached --quiet || git commit -m "Update Helm chart package [skip ci]"
+
+          # Sinkronkan dengan remote: ambil perubahan & merge pakai remote
+          git fetch origin main
+          git merge -X theirs origin/main || true
+
+          # Push ke remote
           git push origin main
 
       - name: Create Deployment Status
