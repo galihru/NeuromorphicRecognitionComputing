@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "snn-expression-detection.fullname" . }}
+  labels:
+    {{- include "snn-expression-detection.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "snn-expression-detection.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "snn-expression-detection.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "snn-expression-detection.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.securityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: camera-device
+              mountPath: {{ .Values.cameraDevice }}
+          env:
+            - name: DISPLAY
+              value: ":99"
+          command: ["/bin/sh", "-c"]
+          args:
+            - >
+              Xvfb :99 -screen 0 640x480x8 -ac &
+              python /app/face_expression_snn.py
+      volumes:
+        - name: camera-device
+          hostPath:
+            path: {{ .Values.cameraDevice }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
