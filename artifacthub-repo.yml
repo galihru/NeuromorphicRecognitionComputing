@@ -2,3 +2,8 @@ repositoryID: ef9ea14a-f879-4b4e-aac5-706d3a093af4
 owners:
   - name: GALIH RIDHO UTOMO
     email: g4lihru@students.unnes.ac.id
+
+name: snn-expression-detection
+description: Implements a biologically-inspired SNN architecture for real-time processing.
+url: https://raw.githubusercontent.com/galihru/NeuromorphicRecognitionComputing/main/packaged-charts/
+type: helm
