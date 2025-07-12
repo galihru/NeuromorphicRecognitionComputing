@@ -2,6 +2,8 @@
 
 ---
 
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/snn-expression-detection)](https://artifacthub.io/packages/search?repo=snn-expression-detection)
+
 ## 1. Project Overview
 
 This repository presents a **Real-Time Facial Expression Recognition System** built upon a **Spiking Neural Network (SNN)**. Inspired by the brain's computational principles, this system processes visual information from a live camera feed to identify human facial expressions (e.g., smile, neutral, surprised) in an unsupervised, adaptive manner. Utilizing Leaky Integrate-and-Fire (LIF) neurons and Spike-Timing-Dependent Plasticity (STDP), the network learns and adapts its synaptic weights based on the temporal correlation of neuronal firing, enhanced by homeostatic plasticity and lateral inhibition mechanisms to promote robust and distinct expression representations.
