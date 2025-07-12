@@ -43,7 +43,7 @@ jobs:
 
           git push origin main
 
-      - name: Create Deployment Status
+      - name: Create Deployment Status (Skip Required Contexts)
         uses: actions/github-script@v7
         with:
           script: |
@@ -54,11 +54,13 @@ jobs:
                 ref: context.sha,
                 environment: 'helm-repo',
                 description: 'Helm Chart Repository',
-                auto_merge: false
+                auto_merge: false,
+                required_contexts: []  // ⚠️ ini penting untuk menghindari konflik dengan status in_progress
               });
             } catch (error) {
               core.setFailed(`Deployment creation failed: ${error.message}`);
             }
+
 
       - name: Verify Links
         run: |
