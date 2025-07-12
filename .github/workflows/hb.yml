@@ -34,15 +34,16 @@ jobs:
           AH_API_KEY_ID: ${{ secrets.AH_API_KEY_ID }}
           AH_API_KEY_SECRET: ${{ secrets.AH_API_KEY_SECRET }}
         run: |
-          # Download binary yang benar (versi terbaru)
-          curl -LO https://github.com/artifacthub/hub/releases/download/v1.15.0/hub-linux-amd64
-          chmod +x hub-linux-amd64
+          # Download binary yang benar
+          wget https://github.com/artifacthub/hub/releases/download/v1.15.0/hub_linux_amd64.tar.gz
+          tar -xzf hub_linux_amd64.tar.gz
+          chmod +x hub
           
-          # Verifikasi download
-          ./hub-linux-amd64 version
+          # Verifikasi CLI
+          ./hub version
           
           # Registrasi package
-          ./hub-linux-amd64 track \
+          ./hub track \
             --api-key-id "$AH_API_KEY_ID" \
             --api-key-secret "$AH_API_KEY_SECRET" \
             --repo-name "${{ github.event.repository.name }}" \
