@@ -39,9 +39,10 @@ jobs:
           git diff --cached --quiet || git commit -m "Update Helm chart package [skip ci]"
 
           git fetch origin main
-          git merge -X theirs origin/main || true
+          git reset --hard origin/main  # Sinkronisasi HEAD lokal dengan remote
 
-          git push origin main
+          git pull origin main --rebase
+          git push origin main || git push origin main --force-with-lease
 
       - name: Create Deployment Status (Skip Required Contexts)
         uses: actions/github-script@v7
@@ -55,15 +56,14 @@ jobs:
                 environment: 'helm-repo',
                 description: 'Helm Chart Repository',
                 auto_merge: false,
-                required_contexts: []  // ⚠️ ini penting untuk menghindari konflik dengan status in_progress
+                required_contexts: []
               });
             } catch (error) {
               core.setFailed(`Deployment creation failed: ${error.message}`);
             }
 
-
       - name: Verify Links
         run: |
-          echo "### 🔗 Deployment Links" >> $GITHUB_STEP_SUMMARY
+          echo "### \ud83d\udd17 Deployment Links" >> $GITHUB_STEP_SUMMARY
           echo "**Helm Repository URL:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/" >> $GITHUB_STEP_SUMMARY
           echo "**Package Index:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml" >> $GITHUB_STEP_SUMMARY
