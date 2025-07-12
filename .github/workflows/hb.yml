@@ -25,27 +25,18 @@ jobs:
 
       - name: Clean and Package
         run: |
-          # Hapus semua file lama
           rm -rf packaged-charts/*
-          
-          # Buat package baru
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
 
-      - name: Force Push Clean Changes
+      - name: Commit Packaged Charts
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
-          
-          # Hanya tambahkan packaged-charts
+          git pull origin main --rebase
           git add packaged-charts/
-          
-          # Commit
           git commit -m "Update Helm chart package [skip ci]" || echo "No changes to commit"
-          
-          # Push dengan strategi force-with-lease yang lebih aman
-          git fetch origin
-          git push origin main --force-with-lease
+          git push origin main
 
       - name: Create Deployment Status
         uses: actions/github-script@v7
@@ -55,17 +46,17 @@ jobs:
               await github.rest.repos.createDeployment({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: context.ref,
+                ref: context.sha,
                 environment: 'helm-repo',
                 description: 'Helm Chart Repository',
                 auto_merge: false
               });
             } catch (error) {
-              core.error(`Deployment creation failed: ${error.message}`);
+              core.setFailed(`Deployment creation failed: ${error.message}`);
             }
 
       - name: Verify Links
         run: |
-          echo "### 🔗 Deployment Links" >> $GITHUB_STEP_SUMMARY
+          echo "### \ud83d\udd17 Deployment Links" >> $GITHUB_STEP_SUMMARY
           echo "**Helm Repository URL:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/" >> $GITHUB_STEP_SUMMARY
           echo "**Package Index:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml" >> $GITHUB_STEP_SUMMARY
