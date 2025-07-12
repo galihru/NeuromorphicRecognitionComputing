@@ -8,41 +8,55 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      deployments: write
+
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Helm
         uses: azure/setup-helm@v3
         with:
           version: v3.14.0
 
-      - name: Package Chart
+      - name: Clean and Package Helm Chart
         run: |
-          # Bersihkan folder sebelumnya
+          # Bersihkan semua file lama
           rm -rf packaged-charts
           mkdir -p packaged-charts
-          
-          # Package chart
+
+          # Buat package chart baru
           helm package helm-chart/ -d packaged-charts
-          
-          # Generate index.yaml
-          helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
-          
-          # Verifikasi struktur
-          ls -la packaged-charts/
+
+          # Buat index.yaml dari awal (overwrite)
+          helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/ --merge /dev/null
+
+          # Tambahkan artifacthub-repo.yml ke folder publik
+          cp artifacthub-repo.yml packaged-charts/
+
+          # Tampilkan isi
+          ls -la packaged-charts
           cat packaged-charts/index.yaml
 
-      - name: Commit and Push
+      - name: Commit and Push Changes
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+
           git add packaged-charts/
-          git commit -m "Update Helm chart package [skip ci]"
+          git commit -m "Update Helm chart package and index [skip ci]" || echo "No changes to commit"
           git push origin main
 
-      - name: Verify Repository
+      - name: Display Helm Repository URL
         run: |
-          echo "🔍 Verifikasi repository Helm:"
+          echo "🔗 Helm Repository URL:"
+          echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/"
+          echo ""
+          echo "📦 Package Index:"
           echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml"
-          curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml | head -n 10
