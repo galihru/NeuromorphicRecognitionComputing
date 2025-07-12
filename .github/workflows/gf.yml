@@ -55,7 +55,7 @@ jobs:
           git commit -m "Update Helm chart package and index [skip ci]" || echo "No changes to commit"
           git push origin main
 
-      - name: Display Helm Repository URL
+      - name: Display Helm Repository URLs
         run: |
           echo "🔗 Helm Repository URL:"
           echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/"
