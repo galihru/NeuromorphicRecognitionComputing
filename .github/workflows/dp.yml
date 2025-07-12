@@ -31,15 +31,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v4
-        with:
-          context: .
-          push: true
-          tags: |
-            galihridhoutomo/snn-expression-detection:latest
-            galihridhoutomo/snn-expression-detection:${{ github.ref_name }}
-
       - name: Extract metadata
         id: meta
         uses: docker/metadata-action@v4
@@ -56,3 +47,12 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            galihridhoutomo/snn-expression-detection:latest
+            galihridhoutomo/snn-expression-detection:${{ github.ref_name }}
