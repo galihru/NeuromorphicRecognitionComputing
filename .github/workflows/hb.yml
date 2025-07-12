@@ -53,9 +53,9 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 ref: context.sha,
-                environment: 'helm-repo',
+                environment: 'helm-snn',
                 description: 'Helm Chart Repository',
-                auto_merge: false,
+                auto_merge: true,
                 required_contexts: []
               });
             } catch (error) {
