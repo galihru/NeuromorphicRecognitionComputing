@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-    
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -29,29 +29,23 @@ jobs:
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://github.com/${{ github.repository }}/raw/main/packaged-charts/
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: helm-chart-package
-          path: packaged-charts/*
-          retention-days: 90
-
       - name: Setup ArtifactHub CLI
         env:
           AH_API_KEY_ID: ${{ secrets.AH_API_KEY_ID }}
           AH_API_KEY_SECRET: ${{ secrets.AH_API_KEY_SECRET }}
         run: |
-          # Download binary yang benar
-          curl -sSL https://github.com/artifacthub/hub/releases/download/v1.15.0/hub_linux_amd64.tar.gz | tar xz
-          chmod +x hub
+          # Download binary yang benar (versi terbaru)
+          curl -LO https://github.com/artifacthub/hub/releases/download/v1.15.0/hub-linux-amd64
+          chmod +x hub-linux-amd64
           
           # Verifikasi download
-          ./hub version
+          ./hub-linux-amd64 version
           
-          # Registrasi package ke ArtifactHub
-          ./hub track \
+          # Registrasi package
+          ./hub-linux-amd64 track \
             --api-key-id "$AH_API_KEY_ID" \
             --api-key-secret "$AH_API_KEY_SECRET" \
+            --repo-name "${{ github.event.repository.name }}" \
             --repo-url "https://github.com/${{ github.repository }}/raw/main/packaged-charts/"
 
       - name: Create Deployment Status
@@ -65,8 +59,7 @@ jobs:
                 ref: context.ref,
                 environment: 'artifacthub',
                 description: 'Helm Chart published to ArtifactHub',
-                auto_merge: false,
-                required_contexts: []
+                auto_merge: false
               });
 
               await github.rest.repos.createDeploymentStatus({
