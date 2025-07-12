@@ -2,8 +2,9 @@ name: Publish Helm Chart
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -20,13 +21,55 @@ jobs:
 
       - name: Package Helm Chart
         run: |
+          mkdir -p packaged-charts
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/
+
+      - name: Get release URL
+        id: get_release
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: process.env.GITHUB_REF.replace('refs/tags/', '')
+            })
+            return release.data.upload_url
 
       - name: Upload Helm Release
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.get_release.outputs.result }}
           asset_path: ./packaged-charts/*
-          asset_name: helm-chart
+          asset_name: helm-chart-${{ github.ref_name }}.tgz
           asset_content_type: application/gzip
+
+      - name: Create Deployment
+        id: create-deployment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deployment = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: process.env.GITHUB_REF,
+              environment: 'artifacthub',
+              required_contexts: [],
+              auto_merge: false,
+              description: 'Helm Chart Release'
+            })
+            return deployment.data.id
+
+      - name: Update Deployment Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: ${{ steps.create-deployment.outputs.result }},
+              state: 'success',
+              environment_url: 'https://artifacthub.io/packages/helm/${{ github.repository_owner }}/${{ github.event.repository.name }}',
+              log_url: 'https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}'
+            })
