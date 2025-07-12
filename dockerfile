@@ -21,4 +21,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ /app/
 
 # Set entrypoint
-CMD ["python", "face_expression_snn.py"]
+CMD ["python", "snn.py"]
