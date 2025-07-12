@@ -3,9 +3,9 @@ entries:
   snn-expression-detection:
   - apiVersion: v2
     appVersion: "1.0"
-    created: "2025-07-12T07:47:48.151466987Z"
+    created: "2025-07-12T07:48:12.079859963Z"
     description: Spiking Neural Network for real-time facial expression recognition
-    digest: d00ff0ae3975d80922a42091459709e7266a5c6f1e20b7357ef99234e3000995
+    digest: 91f4bd570bbfa5682525f093dcba57df9a909a3c10b4d0c59b9b3d4bc8ffdde6
     home: https://github.com/galihru/NeuromorphicRecognitionComputing/
     keywords:
     - ai
@@ -22,4 +22,4 @@ entries:
     urls:
     - https://raw.githubusercontent.com/galihru/NeuromorphicRecognitionComputing/main/packaged-charts/snn-expression-detection-0.1.0.tgz
     version: 0.1.0
-generated: "2025-07-12T07:47:48.15094297Z"
+generated: "2025-07-12T07:48:12.07938548Z"
