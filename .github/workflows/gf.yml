@@ -34,11 +34,13 @@ jobs:
           # Buat package chart baru
           helm package helm-chart/ -d packaged-charts
 
-          # Buat index.yaml dari awal (overwrite)
-          helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/ --merge /dev/null
+          # Buat index.yaml baru (overwrite langsung)
+          helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
 
-          # Tambahkan artifacthub-repo.yml ke folder publik
-          cp artifacthub-repo.yml packaged-charts/
+          # Tambahkan artifacthub-repo.yml jika ada
+          if [ -f artifacthub-repo.yml ]; then
+            cp artifacthub-repo.yml packaged-charts/
+          fi
 
           # Tampilkan isi
           ls -la packaged-charts
