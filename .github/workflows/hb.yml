@@ -9,7 +9,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required for pushing changes
+      contents: write  # Diperlukan untuk push ke repo
 
     steps:
       - name: Checkout Code
@@ -25,40 +25,38 @@ jobs:
 
       - name: Package Helm Chart
         run: |
-          # Clean existing packages
+          # Hapus package lama dan buat yang baru
           rm -rf packaged-charts
           mkdir -p packaged-charts
-          
-          # Package chart
           helm package helm-chart/ -d packaged-charts
-          
-          # Generate index
           helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
 
-      - name: Commit and Push Changes
+      - name: Smart Git Push
         run: |
-          # Configure git
+          # Konfigurasi git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # Check for changes
-          if git diff-index --quiet HEAD --; then
-            echo "No changes to commit"
-          else
-            # Add and commit only packaged-charts directory
-            git add packaged-charts/
-            git commit -m "Update Helm chart package [skip ci]"
-            
-            # Pull changes and push (with retry logic)
-            for i in {1..3}; do
-              git pull origin main --rebase && git push origin main && break || sleep 5
-            done
-          fi
+          # Stash perubahan yang tidak terkait
+          git stash
+          
+          # Pull perubahan terbaru dengan rebase
+          git pull origin main --rebase
+          
+          # Pop stash dan tambahkan hanya packaged-charts
+          git stash pop
+          git add packaged-charts/
+          
+          # Buat commit
+          git commit -m "Update Helm chart package [skip ci]"
+          
+          # Push dengan force jika diperlukan
+          git push origin main || git push origin main --force
 
-      - name: Verify Repository
+      - name: Verify Deployment
         run: |
-          echo "✅ Helm chart available at:"
+          echo "✅ Helm chart successfully published to:"
           echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/"
           echo ""
-          echo "🔍 Verify index.yaml:"
-          curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml | head -n 10
+          echo "📦 Package versions:"
+          curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml | yq eval '.entries.*[].version' -
