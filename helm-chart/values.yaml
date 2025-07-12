@@ -1,20 +1,17 @@
-# values.yaml
 replicaCount: 1
 
 image:
   repository: ghcr.io/galihru/snn-expression-detection
-  tag: v1.0.0  # Versi image
+  tag: v1.1.0
   pullPolicy: IfNotPresent
 
 cameraDevice: "/dev/video0"
 
-# Konfigurasi keamanan
 securityContext:
   capabilities:
     add: ["SYS_RAWIO"]
   privileged: false
 
-# Resource allocation
 resources:
   limits:
     memory: "1Gi"
@@ -23,24 +20,21 @@ resources:
     memory: "512Mi"
     cpu: "300m"
 
-# Node selector untuk node dengan GPU/NPU (opsional)
 nodeSelector:
-  accelerator: neuromorphic  # Contoh: pilih node dengan label khusus
+  accelerator: neuromorphic
 
-# Tolerations untuk taint node (opsional)
 tolerations:
-- key: "accelerator"
-  operator: "Equal"
-  value: "neuromorphic"
-  effect: "NoSchedule"
+  - key: "accelerator"
+    operator: "Equal"
+    value: "neuromorphic"
+    effect: "NoSchedule"
 
-# Affinity rules (opsional)
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
       nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/arch
-          operator: In
-          values:
-          - amd64
+        - matchExpressions:
+            - key: kubernetes.io/arch
+              operator: In
+              values:
+                - amd64
