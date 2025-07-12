@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import multiprocessing
 from collections import deque
+import os
 
 # --- Configuration Constants ---
 # Leaky Integrate-and-Fire (LIF) Neuron Parameters
@@ -494,6 +495,10 @@ def main():
     Main function to initialize the SNN, camera, and start real-time processing
     and visualization.
     """
+    use_xvfb = os.environ.get('USE_XVFB', 'false').lower() == 'true'
+    
+    if use_xvfb:
+        os.environ['DISPLAY'] = ':99'
     snn = FaceExpressionSNN() # Initialize the SNN
 
     # Create a multiprocessing Queue to pass data from the main process to the plotter process
