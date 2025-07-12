@@ -1,4 +1,4 @@
-name: Publish Helm Chart
+name: Publish Helm Chartku
 
 on:
   push:
@@ -9,10 +9,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Diperlukan untuk push ke repo
+      contents: write
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Fresh Copy
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -23,40 +23,49 @@ jobs:
         with:
           version: 'v3.14.0'
 
-      - name: Package Helm Chart
+      - name: Clean and Package
         run: |
-          # Hapus package lama dan buat yang baru
-          rm -rf packaged-charts
-          mkdir -p packaged-charts
+          # Hapus semua file lama
+          rm -rf packaged-charts/*
+          
+          # Buat package baru
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
 
-      - name: Smart Git Push
+      - name: Force Push Clean Changes
         run: |
-          # Konfigurasi git
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           
-          # Stash perubahan yang tidak terkait
-          git stash
-          
-          # Pull perubahan terbaru dengan rebase
-          git pull origin main --rebase
-          
-          # Pop stash dan tambahkan hanya packaged-charts
-          git stash pop
+          # Hanya tambahkan packaged-charts
           git add packaged-charts/
           
-          # Buat commit
-          git commit -m "Update Helm chart package [skip ci]"
+          # Commit
+          git commit -m "Update Helm chart package [skip ci]" || echo "No changes to commit"
           
-          # Push dengan force jika diperlukan
-          git push origin main || git push origin main --force
+          # Push dengan strategi force-with-lease yang lebih aman
+          git fetch origin
+          git push origin main --force-with-lease
 
-      - name: Verify Deployment
+      - name: Create Deployment Status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.repos.createDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.ref,
+                environment: 'helm-repo',
+                description: 'Helm Chart Repository',
+                auto_merge: false
+              });
+            } catch (error) {
+              core.error(`Deployment creation failed: ${error.message}`);
+            }
+
+      - name: Verify Links
         run: |
-          echo "✅ Helm chart successfully published to:"
-          echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/"
-          echo ""
-          echo "📦 Package versions:"
-          curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml | yq eval '.entries.*[].version' -
+          echo "### 🔗 Deployment Links" >> $GITHUB_STEP_SUMMARY
+          echo "**Helm Repository URL:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/" >> $GITHUB_STEP_SUMMARY
+          echo "**Package Index:** https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml" >> $GITHUB_STEP_SUMMARY
