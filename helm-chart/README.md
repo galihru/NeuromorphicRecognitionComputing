@@ -1,7 +1,5 @@
 # Spiking Neuromorphic for Real-Time Facial Expression Recognition Application
 
----
-
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/snn-expression-detection)](https://artifacthub.io/packages/search?repo=snn-expression-detection)
 
 ## 1. Project Overview
