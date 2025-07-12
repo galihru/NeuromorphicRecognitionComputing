@@ -1,0 +1,48 @@
+name: Publish Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Package Chart
+        run: |
+          # Bersihkan folder sebelumnya
+          rm -rf packaged-charts
+          mkdir -p packaged-charts
+          
+          # Package chart
+          helm package helm-chart/ -d packaged-charts
+          
+          # Generate index.yaml
+          helm repo index packaged-charts --url https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/
+          
+          # Verifikasi struktur
+          ls -la packaged-charts/
+          cat packaged-charts/index.yaml
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add packaged-charts/
+          git commit -m "Update Helm chart package [skip ci]"
+          git push origin main
+
+      - name: Verify Repository
+        run: |
+          echo "🔍 Verifikasi repository Helm:"
+          echo "https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml"
+          curl -s https://raw.githubusercontent.com/${{ github.repository }}/main/packaged-charts/index.yaml | head -n 10
