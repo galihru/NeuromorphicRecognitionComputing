@@ -8,6 +8,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      deployments: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -25,51 +28,65 @@ jobs:
           helm package helm-chart/ -d packaged-charts
           helm repo index packaged-charts --url https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/
 
-      - name: Get release URL
-        id: get_release
-        uses: actions/github-script@v6
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          script: |
-            const release = await github.rest.repos.getReleaseByTag({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              tag: process.env.GITHUB_REF.replace('refs/tags/', '')
-            })
-            return release.data.upload_url
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
 
-      - name: Upload Helm Release
+      - name: Upload Helm Chart
         uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.get_release.outputs.result }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./packaged-charts/*
           asset_name: helm-chart-${{ github.ref_name }}.tgz
           asset_content_type: application/gzip
 
       - name: Create Deployment
-        id: create-deployment
+        id: create_deployment
         uses: actions/github-script@v7
+        env:
+          PACKAGE_NAME: "snn-expression-detection"
         with:
           script: |
-            const deployment = await github.rest.repos.createDeployment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: process.env.GITHUB_REF,
-              environment: 'artifacthub',
-              required_contexts: [],
-              auto_merge: false,
-              description: 'Helm Chart Release'
-            })
-            return deployment.data.id
+            try {
+              const deployment = await github.rest.repos.createDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.ref,
+                environment: 'artifacthub',
+                description: 'Helm Chart Release ${{ github.ref_name }}',
+                auto_merge: false,
+                required_contexts: []
+              });
+              return deployment.data.id;
+            } catch (error) {
+              core.error("Failed to create deployment: " + error.message);
+              return null;
+            }
 
       - name: Update Deployment Status
+        if: steps.create_deployment.outputs.result != null
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.repos.createDeploymentStatus({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              deployment_id: ${{ steps.create-deployment.outputs.result }},
-              state: 'success',
-              environment_url: 'https://artifacthub.io/packages/helm/${{ github.repository_owner }}/${{ github.event.repository.name }}',
-              log_url: 'https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}'
-            })
+            try {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: ${{ steps.create_deployment.outputs.result }},
+                state: 'success',
+                environment_url: 'https://artifacthub.io/packages/helm/${{ github.repository_owner }}/${{ env.PACKAGE_NAME }}',
+                log_url: 'https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}'
+              });
+            } catch (error) {
+              core.error("Failed to update deployment status: " + error.message);
+            }
