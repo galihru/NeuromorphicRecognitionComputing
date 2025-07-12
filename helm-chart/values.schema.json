@@ -4,46 +4,77 @@
   "properties": {
     "replicaCount": {
       "type": "integer",
-      "minimum": 1,
       "default": 1,
-      "description": "Number of application replicas"
+      "description": "Jumlah replika pod"
     },
     "image": {
       "type": "object",
       "properties": {
-        "repository": {
-          "type": "string",
-          "description": "Docker image repository"
-        },
-        "tag": {
-          "type": "string",
-          "description": "Docker image tag"
-        },
+        "repository": { "type": "string" },
+        "tag": { "type": "string" },
         "pullPolicy": {
           "type": "string",
-          "enum": ["Always", "IfNotPresent", "Never"],
-          "description": "Image pull policy"
+          "enum": ["Always", "IfNotPresent", "Never"]
         }
       },
       "required": ["repository", "tag"]
     },
-    "service": {
+    "cameraDevice": {
+      "type": "string",
+      "description": "Device kamera yang digunakan (mis. /dev/video0)"
+    },
+    "securityContext": {
       "type": "object",
       "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["ClusterIP", "NodePort", "LoadBalancer"],
-          "description": "Kubernetes service type"
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "add": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
         },
-        "port": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 65535,
-          "description": "Service port"
+        "privileged": { "type": "boolean" }
+      }
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "limits": {
+          "type": "object",
+          "properties": {
+            "memory": { "type": "string" },
+            "cpu": { "type": "string" }
+          }
+        },
+        "requests": {
+          "type": "object",
+          "properties": {
+            "memory": { "type": "string" },
+            "cpu": { "type": "string" }
+          }
         }
-      },
-      "required": ["type", "port"]
+      }
+    },
+    "nodeSelector": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "tolerations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string" },
+          "operator": { "type": "string" },
+          "value": { "type": "string" },
+          "effect": { "type": "string" }
+        }
+      }
+    },
+    "affinity": {
+      "type": "object"
     }
-  },
-  "required": ["replicaCount", "image", "service"]
+  }
 }
