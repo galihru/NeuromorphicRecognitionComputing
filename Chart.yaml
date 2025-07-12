@@ -1,0 +1,17 @@
+apiVersion: v2
+name: snn-expression-detection
+description: Spiking Neural Network for real-time facial expression recognition
+version: 0.1.0
+appVersion: "1.0"
+type: application
+keywords:
+  - ai
+  - machine-learning
+  - computer-vision
+  - neuromorphic-computing
+home: https://github.com/galihru/NeuromorphicRecognitionComputing/
+sources:
+  - https://github.com/galihru/NeuromorphicRecognitionComputing/
+maintainers:
+  - name: GALIH RIDHO UTOMO
+    email: g4lihru@students.unnes.ac.id
